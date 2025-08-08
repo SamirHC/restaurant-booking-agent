@@ -3,3 +3,5 @@ langgraph
 requests
 openai
 langchain[openai]
+pytest-mock
+pytest
