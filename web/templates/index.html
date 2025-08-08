@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>TheHungryUnicorn Booking Assistant</title>
+    </head>
+    <body>
+        <h1>TheHungryUnicorn Booking Assistant</h1>
+        <form method="post" action="/chat">
+            <input type="text" name="message" placeholder="Enter your message..." required>
+            <button type="submit">Send</button>
+        </form>
+        {% for name, message in chat_log %}
+            <p><strong>{{ name }}:</strong> {{ message }}</p>
+        {% endfor %}
+    </body>
+</html>
