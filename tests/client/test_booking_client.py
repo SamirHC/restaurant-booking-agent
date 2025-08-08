@@ -1,3 +1,5 @@
+from datetime import date, time
+
 import pytest
 
 from client.booking_client import BookingClient
@@ -17,7 +19,7 @@ def fake_client() -> BookingClient:
 def test_check_availability(mocker, fake_client: BookingClient):
     mock_post = mocker.patch("requests.Session.post")
 
-    visit_date = "2025-08-06"
+    visit_date = date(2025, 8, 6)
     party_size = 2
     expected_response = {
         "restaurant": fake_client.restaurant_name,
@@ -59,8 +61,8 @@ def test_check_availability(mocker, fake_client: BookingClient):
 def test_make_booking(mocker, fake_client: BookingClient):
     mock_post = mocker.patch("requests.Session.post")
 
-    visit_date = "2025-08-06"
-    visit_time = "12:30"
+    visit_date = date(2025, 8, 6)
+    visit_time = time(12, 30)
     party_size = 2
     customer = Customer(
         first_name="John",
@@ -235,17 +237,3 @@ def test_cancel_booking(mocker, fake_client: BookingClient):
     assert called_data["micrositeName"] == fake_client.restaurant_name
     assert called_data["bookingReference"] == booking_reference
     assert called_data["cancellationReasonId"] == cancellation_reason.code
-
-
-if __name__ == "__main__":        
-    """
-    response = BookingClient.update_booking(
-        "32P21VR",
-        party_size=6,
-        special_requests="Updated request"
-    )
-    """
-
-    response = BookingClient.cancel_booking("32P21VR", CancellationReason.CUSTOMER_REQUEST)
-    
-    print(response)

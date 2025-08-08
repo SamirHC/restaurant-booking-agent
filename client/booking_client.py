@@ -1,3 +1,5 @@
+from datetime import date, time
+
 import requests
 
 from client.model.cancallation_reason import CancellationReason
@@ -16,7 +18,7 @@ class BookingClient:
         self.session.headers.update(headers)
 
 
-    def check_availability(self, visit_date: str, party_size: int):
+    def check_availability(self, visit_date: date, party_size: int):
         url = f"{self.base_url}/api/ConsumerApi/v1/Restaurant/{self.restaurant_name}/AvailabilitySearch"
         response = self.session.post(
             url,
@@ -32,8 +34,8 @@ class BookingClient:
 
     def make_booking(
             self,
-            visit_date: str,
-            visit_time: str,
+            visit_date: date,
+            visit_time: time,
             party_size: int,
             special_requests: str | None = None,
             is_leave_time_confirmed: bool = None,
@@ -70,8 +72,8 @@ class BookingClient:
     def update_booking(
         self,
         booking_reference: str,
-        visit_date: str | None = None,
-        visit_time: str | None = None,
+        visit_date: date | None = None,
+        visit_time: time | None = None,
         party_size: int | None = None,
         special_requests: str | None = None,
         is_leave_time_confirmed: bool | None = None,
