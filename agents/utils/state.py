@@ -8,11 +8,11 @@ from client.model.cancallation_reason import CancellationReason
 
 
 class Intent(Enum):
-    CHECK_AVAILABILITY = 0
-    MAKE_BOOKING = 1
-    GET_BOOKING_DETAILS = 2
-    UPDATE_BOOKING = 3
-    CANCEL_BOOKING = 4
+    CHECK_AVAILABILITY = "CHECK_AVAILABILITY"
+    MAKE_BOOKING = "MAKE_BOOKING"
+    GET_BOOKING_DETAILS = "GET_BOOKING_DETAILS"
+    UPDATE_BOOKING = "UPDATE_BOOKING"
+    CANCEL_BOOKING = "CANCEL_BOOKING"
 
 
 class BookingState(BaseModel):
@@ -25,6 +25,8 @@ class BookingState(BaseModel):
     is_leave_time_confirmed: bool | None = None
     customer: Customer | None = None
     cancellation_reason: CancellationReason | None = None
+    booking_reference: str | None = None
 
     missing_fields: list[str] = []
     message: str | None = None
+    response: str | None = None

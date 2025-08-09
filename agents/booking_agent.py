@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph, START, END
 
 from agents.utils import nodes
-from agents.utils.state import BookingState
+from agents.utils.state import BookingState, Intent
 from ai.langauge_model import LanguageModel
 from services.booking_service import BookingService
 
@@ -12,23 +12,37 @@ class BookingAgent:
 
         # Nodes
         graph_builder.add_node("parse_intent", lambda s: nodes.parse_intent(s, llm))
-        graph_builder.add_node("validate_intent", lambda s: nodes.validate_parsed_intent(s, llm))
         graph_builder.add_node("missing_field", nodes.ask_for_missing_field)
 
-        graph_builder.add_node("make_booking", nodes.make_booking)
-        graph_builder.add_node("check_availability", nodes.check_availability)
-        graph_builder.add_node("get_booking_details", nodes.get_booking_details)
-        graph_builder.add_node("update_booking", nodes.update_booking)
-        graph_builder.add_node("cancel_booking", nodes.cancel_booking)
+        graph_builder.add_node("make_booking", lambda s: nodes.make_booking(s, booking_service))
+        graph_builder.add_node("check_availability", lambda s: nodes.check_availability(s, booking_service))
+        graph_builder.add_node("get_booking_details", lambda s: nodes.get_booking_details(s, booking_service))
+        graph_builder.add_node("update_booking", lambda s: nodes.update_booking(s, booking_service))
+        graph_builder.add_node("cancel_booking", lambda s: nodes.cancel_booking(s, booking_service))
 
         # Edges
         graph_builder.add_edge(START, "parse_intent")
-        # graph_builder.add_edge("parse_intent", "validate_intent")
-
-        graph_builder.add_edge("parse_intent", END)
+        graph_builder.add_conditional_edges("parse_intent", self.route_parsed_intent)
+        
 
         # Compile
         self.graph = graph_builder.compile()
+
+
+    def route_parsed_intent(self, state: BookingState) -> str:
+        match state.intent:
+            case Intent.CHECK_AVAILABILITY:
+                return "check_availability"
+            case Intent.MAKE_BOOKING:
+                return "make_booking"
+            case Intent.GET_BOOKING_DETAILS:
+                return "get_booking_details"
+            case Intent.UPDATE_BOOKING:
+                return "update_booking"
+            case Intent.CANCEL_BOOKING:
+                return "cancel_booking"
+            case _:
+                return "parse_intent"
 
 
 if __name__ == "__main__":
@@ -49,6 +63,11 @@ if __name__ == "__main__":
     llm = OpenAILanguageModel()
     agent = BookingAgent(booking_service, llm)
 
-    state = BookingState(message="Book me a table for 4 tomorrow at 7pm")
-    result_state = agent.graph.invoke(state)
-    print(result_state)
+    state = BookingState()
+    while True:
+        state.message = input("You: ")
+        if state.message == "quit":
+            break
+        state = BookingState(**agent.graph.invoke(state))
+        print(f"State: {state}")
+        print(f"Agent: {state.response}")

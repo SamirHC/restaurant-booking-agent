@@ -15,9 +15,9 @@ def _extract_json_braces(text: str) -> str:
     return text[start:end+1]
 
 
-def parse_intent(state: BookingState, llm: LanguageModel):
+def parse_intent(state: BookingState, llm: LanguageModel) -> BookingState:
     prompt = f"""
-        You are a booking assistant. Today is {date.today().isoformat()}.
+        You are a booking assistant. Today is {date.today().strftime("%A %d %B %Y")}.
         Detect the intent and extract fields from this user message:
         
         {state.message}
@@ -46,7 +46,10 @@ def parse_intent(state: BookingState, llm: LanguageModel):
     response = llm.chat(prompt)
     extracted_json = _extract_json_braces(response)
     print(extracted_json)
-    parsed = json.loads(extracted_json)
+    try:
+        parsed = json.loads(extracted_json)
+    except json.JSONDecodeError:
+        parsed = {}
     for field, value in parsed.items():
         if value is not None and getattr(state, field, None) is None:
             if field == "visit_date":
@@ -56,49 +59,46 @@ def parse_intent(state: BookingState, llm: LanguageModel):
             elif field == "customer":
                 value = Customer(**value)
             elif field == "cancellation_reason":
-                value = None
+                value = None  # Replace with enum parsing
             setattr(state, field, value)
 
     return state
 
 
-def validate_parsed_intent(state: BookingState):
-    if state.intent:
-        pass
-
-
-def parse_booking_request(state: BookingState):
-    prompt = "\n".join((
-        "Extract booking details from this message:",
-        "",
-        f"{state.message}",
-        "",
-        "Respond with JSON:",
-    ))
-    
-    return state
-
-
-def ask_for_missing_field(state: BookingState):
+def ask_for_missing_field(state: BookingState) -> BookingState:
     state["missing_fields"] = []
     return state
 
 
-def make_booking(state: BookingState, booking_service: BookingService):
-    booking = booking_service.make_booking(
-        visit_date=state["visit_date"],
-        visit_time=state["visit_time"],
-        party_size=state["party_size"],
+def check_availability(state: BookingState, booking_service: BookingService) -> BookingState:
+    response = booking_service.check_availability(state.visit_date, state.party_size)
+    print(response)
+    return state
+
+
+def make_booking(state: BookingState, booking_service: BookingService) -> BookingState:
+    response = booking_service.make_booking(
+        visit_date=state.visit_date,
+        visit_time=state.visit_time,
+        party_size=state.party_size,
     )
+    print(response)
+    return state
 
-def check_availability(state: BookingState, booking_service: BookingService):
-    pass
 
-def get_booking_details(state: BookingState, booking_service: BookingService):
-    pass
+def get_booking_details(state: BookingState, booking_service: BookingService) -> BookingState:
+    response = booking_service.get_booking_details(state.booking_reference)
+    print(response)
+    return state
 
-def update_booking(state: BookingState, booking_service: BookingService):
-    pass
 
-def cancel_booking(state: BookingState, booking_service: BookingService):
-    pass
+def update_booking(state: BookingState, booking_service: BookingService) -> BookingState:
+    response = booking_service.update_booking(state.booking_reference)
+    print(response)
+    return state
+
+
+def cancel_booking(state: BookingState, booking_service: BookingService) -> BookingState:
+    response = booking_service.cancel_booking(state.booking_reference, None)
+    print(response)
+    return state
