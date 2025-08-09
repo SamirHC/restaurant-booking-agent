@@ -1,16 +1,23 @@
 from datetime import date, time
 import json
 
-from langchain_openai import ChatOpenAI
-
 from agents.utils.state import BookingState, Intent
+from ai.langauge_model import LanguageModel
 from client.model.customer import Customer
 from services.booking_service import BookingService
 
 
-def parse_intent(state: BookingState, llm: ChatOpenAI):
+def _extract_json_braces(text: str) -> str:
+    start = text.find('{')
+    end = text.rfind('}')
+    if start == -1 or end == -1:
+        raise ValueError("No JSON object found in the text")
+    return text[start:end+1]
+
+
+def parse_intent(state: BookingState, llm: LanguageModel):
     prompt = f"""
-        You are a booking assistant. 
+        You are a booking assistant. Today is {date.today().isoformat()}.
         Detect the intent and extract fields from this user message:
         
         {state.message}
@@ -18,7 +25,7 @@ def parse_intent(state: BookingState, llm: ChatOpenAI):
         Possible intents:
         {"\n".join([intent.name for intent in Intent])}
 
-        Respond in JSON:
+        Respond in raw JSON for it to be parsed by Python json.loads:
         {{
             "intent": <intent> | null,
             "visit_date": "YYYY-MM-DD" | null,
@@ -36,8 +43,10 @@ def parse_intent(state: BookingState, llm: ChatOpenAI):
             "cancellation_reason": str | null
         }}
     """
-    response = llm.invoke(prompt)
-    parsed = json.loads(response.content)
+    response = llm.chat(prompt)
+    extracted_json = _extract_json_braces(response)
+    print(extracted_json)
+    parsed = json.loads(extracted_json)
     for field, value in parsed.items():
         if value is not None and getattr(state, field, None) is None:
             if field == "visit_date":
