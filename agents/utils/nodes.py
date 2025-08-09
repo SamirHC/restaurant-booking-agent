@@ -71,8 +71,12 @@ def ask_for_missing_field(state: BookingState) -> BookingState:
 
 
 def check_availability(state: BookingState, booking_service: BookingService) -> BookingState:
-    response = booking_service.check_availability(state.visit_date, state.party_size)
+    try:
+        response = booking_service.check_availability(state.visit_date, state.party_size)
+    except:
+        response = None
     print(response)
+    state.response = str(response)
     return state
 
 
@@ -83,22 +87,28 @@ def make_booking(state: BookingState, booking_service: BookingService) -> Bookin
         party_size=state.party_size,
     )
     print(response)
+    state.response = str(response)
     return state
 
 
-def get_booking_details(state: BookingState, booking_service: BookingService) -> BookingState:
+def get_booking_details(state: BookingState, booking_service: BookingService) -> BookingState:    
     response = booking_service.get_booking_details(state.booking_reference)
+    if not response:
+        response = "The booking reference was not found."
     print(response)
+    state.response = str(response)
     return state
 
 
 def update_booking(state: BookingState, booking_service: BookingService) -> BookingState:
     response = booking_service.update_booking(state.booking_reference)
     print(response)
+    state.response = str(response)
     return state
 
 
 def cancel_booking(state: BookingState, booking_service: BookingService) -> BookingState:
     response = booking_service.cancel_booking(state.booking_reference, None)
     print(response)
+    state.response = str(response)
     return state

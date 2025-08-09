@@ -1,5 +1,7 @@
 from datetime import date, time
 
+from requests.exceptions import HTTPError
+
 from client.booking_client import BookingClient
 from client.model.customer import Customer
 from client.model.cancallation_reason import CancellationReason
@@ -33,7 +35,10 @@ class BookingService:
 
 
     def get_booking_details(self, booking_reference: str):
-        return self.client.get_booking_details(booking_reference)
+        try:
+            return self.client.get_booking_details(booking_reference)
+        except HTTPError:
+            return {}
 
 
     def update_booking(
