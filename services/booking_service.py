@@ -5,6 +5,7 @@ from requests.exceptions import HTTPError
 from client.booking_client import BookingClient
 from client.model.customer import Customer
 from client.model.cancallation_reason import CancellationReason
+from services import exceptions
 
 
 class BookingService:
@@ -37,8 +38,8 @@ class BookingService:
     def get_booking_details(self, booking_reference: str):
         try:
             return self.client.get_booking_details(booking_reference)
-        except HTTPError:
-            return {}
+        except HTTPError as e:
+            raise exceptions.BookingNotFoundError() from e
 
 
     def update_booking(
@@ -50,18 +51,24 @@ class BookingService:
         special_requests: str | None = None,
         is_leave_time_confirmed: bool | None = None,
     ):
-        return self.client.update_booking(
-            booking_reference,
-            visit_date,
-            visit_time,
-            party_size,
-            special_requests,
-            is_leave_time_confirmed
-        )
+        try:
+            return self.client.update_booking(
+                booking_reference,
+                visit_date,
+                visit_time,
+                party_size,
+                special_requests,
+                is_leave_time_confirmed
+            )
+        except HTTPError as e:
+            raise exceptions.BookingNotFoundError() from e
 
 
     def cancel_booking(self, booking_reference: str, cancellation_reason: CancellationReason):
-        return self.client.cancel_booking(booking_reference, cancellation_reason)
+        try:
+            return self.client.cancel_booking(booking_reference, cancellation_reason)
+        except HTTPError as e:
+            raise exceptions.BookingNotFoundError() from e
 
 
 if __name__ == "__main__":

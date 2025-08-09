@@ -51,7 +51,6 @@ async def chat(request: Request, message: str = Form(...)):
     state = BookingState(**agent.graph.invoke(state))
     print(f"State: {state}")
     print(f"Agent: {state.response}")
-    chat_log.append(("State", state))
     chat_log.append(("Agent", state.response))
 
     return templates.TemplateResponse("index.html", {

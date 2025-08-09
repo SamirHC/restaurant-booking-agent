@@ -5,6 +5,7 @@ from agents.utils.state import BookingState, Intent
 from ai.langauge_model import LanguageModel
 from client.model.customer import Customer
 from services.booking_service import BookingService
+from services import exceptions
 
 
 def _extract_json_braces(text: str) -> str:
@@ -92,8 +93,9 @@ def make_booking(state: BookingState, booking_service: BookingService) -> Bookin
 
 
 def get_booking_details(state: BookingState, booking_service: BookingService) -> BookingState:    
-    response = booking_service.get_booking_details(state.booking_reference)
-    if not response:
+    try:
+        response = booking_service.get_booking_details(state.booking_reference)
+    except exceptions.BookingNotFoundError:
         response = "The booking reference was not found."
     print(response)
     state.response = str(response)
@@ -101,14 +103,20 @@ def get_booking_details(state: BookingState, booking_service: BookingService) ->
 
 
 def update_booking(state: BookingState, booking_service: BookingService) -> BookingState:
-    response = booking_service.update_booking(state.booking_reference)
+    try:
+        response = booking_service.update_booking(state.booking_reference)
+    except exceptions.BookingNotFoundError:
+        response = "The booking reference was not found."
     print(response)
     state.response = str(response)
     return state
 
 
 def cancel_booking(state: BookingState, booking_service: BookingService) -> BookingState:
-    response = booking_service.cancel_booking(state.booking_reference, None)
+    try:
+        response = booking_service.cancel_booking(state.booking_reference, None)
+    except exceptions.BookingNotFoundError:
+        response = "The booking reference was not found."
     print(response)
     state.response = str(response)
     return state
