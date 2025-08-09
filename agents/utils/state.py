@@ -24,7 +24,6 @@ class BookingState(BaseModel):
     special_requests: str | None = None
     is_leave_time_confirmed: bool | None = None
     customer: Customer | None = None
-    cancellation_reason: CancellationReason | None = None
     booking_reference: str | None = None
 
     missing_fields: list[str] = []

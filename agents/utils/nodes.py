@@ -4,6 +4,7 @@ import json
 from agents.utils.state import BookingState, Intent
 from ai.langauge_model import LanguageModel
 from client.model.customer import Customer
+from client.model.cancallation_reason import CancellationReason
 from services.booking_service import BookingService
 from services import exceptions
 
@@ -41,7 +42,6 @@ def parse_intent(state: BookingState, llm: LanguageModel) -> BookingState:
                 "mobile": str | null,
             }} | null,
             "booking_reference": str | null,
-            "cancellation_reason": str | null
         }}
     """
     response = llm.chat(prompt)
@@ -114,7 +114,10 @@ def update_booking(state: BookingState, booking_service: BookingService) -> Book
 
 def cancel_booking(state: BookingState, booking_service: BookingService) -> BookingState:
     try:
-        response = booking_service.cancel_booking(state.booking_reference, None)
+        response = booking_service.cancel_booking(
+            state.booking_reference,
+            CancellationReason.CUSTOMER_REQUEST
+        )
     except exceptions.BookingNotFoundError:
         response = "The booking reference was not found."
     print(response)
