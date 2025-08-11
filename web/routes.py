@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Request, Form
+from collections import defaultdict
+
+from fastapi import APIRouter, Request, Form, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from uuid import uuid4
@@ -40,20 +42,37 @@ def create_agent():
     return agent
 
 agent = create_agent()
-chat_log = []
+chat_logs = defaultdict(list)
+booking_states = defaultdict(BookingState)
 
 @router.post("/chat", response_class=HTMLResponse)
 async def chat(request: Request, message: str = Form(...)):
-    state = BookingState()
-    state.message = message
-    chat_log.append(("User", message))
+    session_id = request.cookies.get("session_id")
+    response = Response()
 
+    if not session_id:
+        session_id = str(uuid4())
+        response.set_cookie("session_id", session_id)
+
+    chat_log = chat_logs[session_id]
+    state = booking_states[session_id]
+
+    chat_log.append(("User", message))
+    state.message = message
     state = BookingState(**agent.graph.invoke(state))
     print(f"State: {state}")
     print(f"Agent: {state.response}")
     chat_log.append(("Agent", state.response))
+    state.message = None
+    booking_states[session_id] = state
 
-    return templates.TemplateResponse("index.html", {
+    template_response = templates.TemplateResponse("index.html", {
         "request": request, 
         "chat_log": chat_log,
     })
+
+    response.body = template_response.body
+    response.status_code = template_response.status_code
+    response.headers.update(template_response.headers)
+    
+    return response

@@ -66,6 +66,11 @@ def parse_intent(state: BookingState, llm: LanguageModel) -> BookingState:
     return state
 
 
+def ask_again(state: BookingState) -> BookingState:
+    state.response = "How can I help?"
+    return state
+
+
 def ask_for_missing_field(state: BookingState) -> BookingState:
     state["missing_fields"] = []
     return state

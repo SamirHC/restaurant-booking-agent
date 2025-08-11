@@ -12,6 +12,7 @@ class BookingAgent:
 
         # Nodes
         graph_builder.add_node("parse_intent", lambda s: nodes.parse_intent(s, llm))
+        graph_builder.add_node("ask_again", nodes.ask_again)
         graph_builder.add_node("missing_field", nodes.ask_for_missing_field)
 
         graph_builder.add_node("make_booking", lambda s: nodes.make_booking(s, booking_service))
@@ -23,7 +24,6 @@ class BookingAgent:
         # Edges
         graph_builder.add_edge(START, "parse_intent")
         graph_builder.add_conditional_edges("parse_intent", self.route_parsed_intent)
-        
 
         # Compile
         self.graph = graph_builder.compile()
@@ -42,7 +42,7 @@ class BookingAgent:
             case Intent.CANCEL_BOOKING:
                 return "cancel_booking"
             case _:
-                return "parse_intent"
+                return "ask_again"
 
 
 if __name__ == "__main__":
