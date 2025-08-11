@@ -4,7 +4,6 @@ from enum import Enum
 from pydantic import BaseModel
 
 from client.model.customer import Customer
-from client.model.cancallation_reason import CancellationReason
 
 
 class Intent(Enum):

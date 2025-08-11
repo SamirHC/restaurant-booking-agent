@@ -60,8 +60,6 @@ def parse_intent(state: BookingState, llm: LanguageModel) -> BookingState:
                 value = time.fromisoformat(value)
             elif field == "customer":
                 value = Customer(**value)
-            elif field == "cancellation_reason":
-                value = None  # Replace with enum parsing
             setattr(state, field, value)
 
     return state
