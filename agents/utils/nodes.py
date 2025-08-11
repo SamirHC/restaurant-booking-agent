@@ -147,7 +147,10 @@ def make_booking(state: BookingState, booking_service: BookingService) -> Bookin
         party_size=state.party_size,
     )
     print(response)
-    state.response = str(response)
+    if response.get("status") == "confirmed":
+        state.response = f"Your booking has been confirmed. The booking reference is {response.get("booking_reference")}."
+    else:
+        state.response = str(response)
     return state
 
 
