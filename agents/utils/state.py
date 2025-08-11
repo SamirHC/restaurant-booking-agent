@@ -26,6 +26,5 @@ class BookingState(BaseModel):
     customer: Customer | None = None
     booking_reference: str | None = None
 
-    missing_fields: list[str] = []
     message: str | None = None
     response: str | None = None

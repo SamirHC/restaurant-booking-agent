@@ -30,6 +30,9 @@ class BookingAgent:
 
 
     def route_parsed_intent(self, state: BookingState) -> str:
+        if nodes.is_field_missing(state):
+            return "missing_field"
+
         match state.intent:
             case Intent.CHECK_AVAILABILITY:
                 return "check_availability"

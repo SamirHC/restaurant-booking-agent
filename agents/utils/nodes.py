@@ -20,6 +20,7 @@ def _extract_json_braces(text: str) -> str:
 def parse_intent(state: BookingState, llm: LanguageModel) -> BookingState:
     prompt = f"""
         You are a booking assistant. Today is {date.today().strftime("%A %d %B %Y")}.
+        For additional context, your previous response was: {state.response}.
         Detect the intent and extract fields from this user message:
         
         {state.message}
@@ -71,8 +72,57 @@ def ask_again(state: BookingState) -> BookingState:
     return state
 
 
+required_fields_map = {
+        Intent.CANCEL_BOOKING: ["booking_reference"],
+        Intent.CHECK_AVAILABILITY: ["visit_date", "party_size"],
+        Intent.GET_BOOKING_DETAILS: ["booking_reference"],
+        Intent.MAKE_BOOKING: ["visit_date", "visit_time", "party_size"],
+        Intent.UPDATE_BOOKING: ["booking_reference"],
+    }
+
+
+def is_field_missing(state: BookingState):
+    required_fields = required_fields_map.get(state.intent, [])
+    for field in required_fields:
+        if getattr(state, field) is None:
+            return True
+    if state.intent == Intent.UPDATE_BOOKING:
+        if not any([
+            state.visit_date,
+            state.visit_time,
+            state.party_size,
+            state.special_requests,
+            state.is_leave_time_confirmed
+        ]):
+            return True
+    return False
+
+
 def ask_for_missing_field(state: BookingState) -> BookingState:
-    state["missing_fields"] = []
+    required_fields = required_fields_map.get(state.intent, [])
+
+    if state.intent == Intent.UPDATE_BOOKING:
+        if not state.booking_reference:
+            state.response = "What is your booking reference?"
+            return state
+        if not any([
+            state.visit_date,
+            state.visit_time,
+            state.party_size,
+            state.special_requests,
+            state.is_leave_time_confirmed
+        ]):
+            state.response = "What details would you like to update"
+            return state
+        state.response = None
+        return state
+    
+    for field in required_fields:
+        if getattr(state, field) is None:
+            state.response = f"Please provide {field.replace("_", " ")}."
+            return state
+
+    state.response = None
     return state
 
 
