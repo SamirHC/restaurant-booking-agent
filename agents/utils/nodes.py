@@ -66,6 +66,7 @@ def parse_intent(state: BookingState, llm: LanguageModel) -> BookingState:
 
 
 def ask_again(state: BookingState) -> BookingState:
+    print("ASK AGAIN")
     state.response = "How can I help?"
     return state
 
@@ -97,6 +98,7 @@ def is_field_missing(state: BookingState):
 
 
 def ask_for_missing_field(state: BookingState) -> BookingState:
+    print("ASK FOR MISSING FIELD")
     required_fields = required_fields_map.get(state.intent, [])
 
     if state.intent == Intent.UPDATE_BOOKING:
@@ -125,16 +127,20 @@ def ask_for_missing_field(state: BookingState) -> BookingState:
 
 
 def check_availability(state: BookingState, booking_service: BookingService) -> BookingState:
+    print("CHECK AVAILABILITY")
     try:
         response = booking_service.check_availability(state.visit_date, state.party_size)
+        times = [item.get("time") for item in response.get("available_slots", []) if item.get("available")]
+        state.response = f"The restaurant has availability on {state.visit_date} at the times: {", ".join(times)}"
     except:
         response = None
+        state.response = str(response)
     print(response)
-    state.response = str(response)
     return state
 
 
 def make_booking(state: BookingState, booking_service: BookingService) -> BookingState:
+    print("MAKE BOOKING")
     response = booking_service.make_booking(
         visit_date=state.visit_date,
         visit_time=state.visit_time,
@@ -146,6 +152,7 @@ def make_booking(state: BookingState, booking_service: BookingService) -> Bookin
 
 
 def get_booking_details(state: BookingState, booking_service: BookingService) -> BookingState:    
+    print("GET BOOKING DETAILS")
     try:
         response = booking_service.get_booking_details(state.booking_reference)
     except exceptions.BookingNotFoundError:
@@ -156,6 +163,7 @@ def get_booking_details(state: BookingState, booking_service: BookingService) ->
 
 
 def update_booking(state: BookingState, booking_service: BookingService) -> BookingState:
+    print("UPDATE BOOKING")
     try:
         response = booking_service.update_booking(state.booking_reference)
     except exceptions.BookingNotFoundError:
@@ -166,6 +174,7 @@ def update_booking(state: BookingState, booking_service: BookingService) -> Book
 
 
 def cancel_booking(state: BookingState, booking_service: BookingService) -> BookingState:
+    print("CANCEL BOOKING")
     try:
         response = booking_service.cancel_booking(
             state.booking_reference,
